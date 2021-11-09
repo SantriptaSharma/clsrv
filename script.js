@@ -1,12 +1,27 @@
 document.addEventListener("DOMContentLoaded", () => {
-	
 	let statusText = document.getElementById("status-text");
 	let fileBrowser = document.getElementById("file-browser");
 	let file = null;
-	let audioContext = new AudioContext({sampleRate: 22050});
+	let perfElements = [];
+	let sampleRate = 22050;
+	let audioContext = new AudioContext({sampleRate: sampleRate});
 	let audioSource = audioContext.createBufferSource();
 	let playing = false;
 	let audioData = new Float32Array(1);
+
+	perfElements = document.getElementById("perf").childNodes;
+	let activePerf = document.getElementById("220");
+
+	for(let i = 0; i < perfElements.length; i++)
+	{
+		perfElements[i].addEventListener("click", (e) => {
+			activePerf.classList.remove("active");
+			activePerf = perfElements[i];
+			sampleRate = parseInt(activePerf.getAttribute("value"));
+			audioContext = new AudioContext({sampleRate: sampleRate});
+			perfElements[i].classList.add("active");
+		});
+	}
 
 	document.getElementById("run").addEventListener("click", () => {
 		if(file == null)
@@ -26,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	fileBrowser.addEventListener("change", () => {
 		let input = Array.from(fileBrowser.files);
-		audioContext = new AudioContext({ sampleRate: 22050 });
+		audioContext = new AudioContext({ sampleRate: sampleRate });
 		if(input == null) return 0;
 		file = input[0];
 		let filePath = fileBrowser.value.split('\\');

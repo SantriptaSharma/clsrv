@@ -15,7 +15,13 @@
 				<br><input type = "code" id = "input" size = 52 value = "value * (0.5 + ((1 + sin(tau * (sample/rate) * 1))/2))"/>
 			</div>
 			<button id = "run">Run</button>
-			<p>processing may take a while depending on audio length and complexity of expression</p>
+			<p>processing may take a while depending on audio length and complexity of expression.<br>you can set a lower sample rate if you are experiencing issues, though it will impact sound quality.</p>
+			<div id = "perf">
+				<button id="441" value = "44100">44100Hz</button>
+				<button id="220" class = "active" value = "22050">22050Hz</button>
+				<button id="110" value = "11025">11025Hz</button>
+				<button id="551" value = "5512">5512Hz</button>
+			</div>
 		</main>
 		<footer>
 			<p style="text-align: center">inspired by <a href="https://tixy.land" target = "_blank">tixy</a>, made by <a href = "https://github.com/SantriptaSharma/clsrt" target="_blank">me</a></p>

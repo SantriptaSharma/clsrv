@@ -70,6 +70,34 @@ footer
 	content: "(count, list, sample, rate, value) => ";
 }
 
+#perf
+{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+
+p
+{
+	text-align: center;
+}
+
+#perf button
+{
+	color: #e95151;
+	background-color: #00000000;
+	cursor: pointer;
+	outline: none;
+	border:none;
+	padding: 4px 8px;
+	transition-duration: 0.2s;
+}
+
+#perf button.active
+{
+	color: #8cc63f;
+}
+
 #run
 {
 	color: #e95151;

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset = "utf-8" />
+		<meta name = "viewport" data = "width=device-width, initial-scale=1.0" />
+		<link rel = "stylesheet" href = "./style.css" />
+		<script type = "text/javascript" src = "./script.js"></script>
+		<title>clsrt: An Audio Playground</title>
+	</head>
+	<body>
+		<main>
+			<div id = "status-text">Upload audio file</div>
+			<input type = "file" accept = ".wav,.mp3" multiple = "false" id = "file-browser" />
+			<div id = "input-container">
+				<br><input type = "code" id = "input" size = 52 value = "value * (0.5 + ((1 + sin(tau * (sample/rate) * 1))/2))"/>
+			</div>
+			<button id = "run">Run</button>
+			<p>processing may take a while depending on audio length and complexity of expression</p>
+		</main>
+		<footer>
+			<p style="text-align: center">inspired by <a href="https://tixy.land" target = "_blank">tixy</a>, made by <a href = "https://github.com/SantriptaSharma/clsrt" target="_blank">me</a></p>
+		</footer>
+	</body>
+</html>

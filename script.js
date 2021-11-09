@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	let audioContext = new AudioContext({sampleRate: sampleRate});
 	let audioSource = audioContext.createBufferSource();
 	let playing = false;
+	let running = false;
 	let audioData = new Float32Array(1);
 
 	perfElements = document.getElementById("perf").childNodes;
@@ -19,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			activePerf = perfElements[i];
 			sampleRate = parseInt(activePerf.getAttribute("value"));
 			audioContext = new AudioContext({sampleRate: sampleRate});
+			if(file != null) fileBrowser.dispatchEvent(new Event("change"));
 			perfElements[i].classList.add("active");
 		});
 	}
@@ -145,6 +147,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	function RunCode(code)
 	{
+		if(running) return;
+
+		running = true;
 		let count = audioData.length;
 		let newAudio = new Float32Array(count);
 		let rate = audioContext.sampleRate;
@@ -167,6 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			}
 		}
 
+		running = false;
 		PlayAudioData(newAudio, count/rate);
 	}
 });

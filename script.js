@@ -1,14 +1,20 @@
 document.addEventListener("DOMContentLoaded", () => {
 	let statusText = document.getElementById("status-text");
 	let fileBrowser = document.getElementById("file-browser");
-	let file = null;
+	let progressText = document.getElementById("progress-text");
 	let perfElements = [];
+
+	let file = null;
 	let sampleRate = 22050;
-	let audioContext = new AudioContext({sampleRate: sampleRate});
-	let audioSource = audioContext.createBufferSource();
+	
+	let audioContext = null;
+	let audioSource = null;
+	let audioData = new Float32Array(1);
+	
 	let playing = false;
 	let running = false;
-	let audioData = new Float32Array(1);
+
+	let worker = null;
 
 	perfElements = document.getElementById("perf").childNodes;
 	let activePerf = document.getElementById("220");
@@ -19,7 +25,20 @@ document.addEventListener("DOMContentLoaded", () => {
 			activePerf.classList.remove("active");
 			activePerf = perfElements[i];
 			sampleRate = parseInt(activePerf.getAttribute("value"));
-			audioContext = new AudioContext({sampleRate: sampleRate});
+
+			audioSource.disconnect(audioContext.destination);
+			audioSource.stop();
+
+			audioContext = new AudioContext({sampleRate: sampleRate})
+			
+			audioSource = null;
+			
+			if(running)
+			{
+				worker.terminate();
+				running = false;
+			}
+
 			if(file != null) fileBrowser.dispatchEvent(new Event("change"));
 			perfElements[i].classList.add("active");
 		});
@@ -33,7 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 
 		let code = document.getElementById("input").value;
-		console.log(code);
 		RunCode(code);
 	});
 	
@@ -43,8 +61,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	fileBrowser.addEventListener("change", () => {
 		let input = Array.from(fileBrowser.files);
-		audioContext = new AudioContext({ sampleRate: sampleRate });
+		
+		if(audioContext == null) audioContext = new AudioContext({ sampleRate: sampleRate });
 		if(input == null) return 0;
+
+		if(running)
+		{
+			running = false;
+			worker.terminate();
+		}
+
 		file = input[0];
 		let filePath = fileBrowser.value.split('\\');
 		let fileName = filePath[filePath.length-1];
@@ -61,14 +87,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	function PlayAudioData(data, duration = 3)
 	{
-		if(playing) audioSource.stop(0);
+		if(playing && audioSource != null)
+		{
+			audioSource.stop(0);
+			audioSource.disconnect(audioContext.destination);
+			audioSource = null;
+		}
+		
 		audioSource = audioContext.createBufferSource();
+		
 		let buffer = audioContext.createBuffer(1, data.length, audioContext.sampleRate);
 		buffer.getChannelData(0).set(data);
 		audioSource.buffer = buffer;
 
 		audioSource.onended = () => playing = false;
-		
+
 		audioSource.connect(audioContext.destination);
 		audioSource.start(0, 0, duration);
 		playing = true;
@@ -148,31 +181,59 @@ document.addEventListener("DOMContentLoaded", () => {
 	function RunCode(code)
 	{
 		if(running) return;
-
+		worker = new Worker("./worker.js");
 		running = true;
 		let count = audioData.length;
-		let newAudio = new Float32Array(count);
+		// let newAudio = new Float32Array(count);
 		let rate = audioContext.sampleRate;
-		let list = audioData;
 		code = CodeAnalysis(code);
 
-		for(let sample = 0; sample < audioData.length; sample++)
-		{
-			let value = audioData[sample];
-			console.log("Running " + code);
-			
-			try
+		worker.onmessage = (msg) => {
+			running = false;
+			msg = msg.data;
+
+			switch(msg.code)
 			{
-				newAudio[sample] = eval(code);
-			}
-			catch(e)
-			{
-				alert(ErrorMessageAnalysis(e.message));
-				return;
+				case "ok":
+					let newAudio = new Float32Array(msg.new);
+					audioData = new Float32Array(msg.old);
+					worker.terminate();
+					PlayAudioData(newAudio, msg.time)
+					progressText.innerText = "100%";
+				break;
+
+				case "error":
+					alert(ErrorMessageAnalysis(msg.error.message))
+					audioData = new Float32Array(msg.old);
+					progressText.innerText = "Error";
+					worker.terminate();
+				break;
+
+				case "status":
+					running = true;
+					progressText.innerText = (msg.percent * 100).toFixed(2) + "%";
+				break;
 			}
 		}
 
-		running = false;
-		PlayAudioData(newAudio, count/rate);
+		worker.postMessage({audioData: audioData.buffer, count: count, rate: rate, code: code}, [audioData.buffer]);
+		
+		// for(let sample = 0; sample < audioData.length; sample++)
+		// {
+		// 	let value = audioData[sample];
+		// 	console.log("Running " + code);
+			
+		// 	try
+		// 	{
+		// 		newAudio[sample] = eval(code);
+		// 	}
+		// 	catch(e)
+		// 	{
+		// 		alert(ErrorMessageAnalysis(e.message));
+		// 		return;
+		// 	}
+		// }
+
+		// PlayAudioData(newAudio, count/rate);
 	}
 });

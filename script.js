@@ -26,8 +26,11 @@ document.addEventListener("DOMContentLoaded", () => {
 			activePerf = perfElements[i];
 			sampleRate = parseInt(activePerf.getAttribute("value"));
 
-			audioSource.disconnect(audioContext.destination);
-			audioSource.stop();
+			if(audioSource != null)
+			{
+				audioSource.disconnect(audioContext.destination);
+				audioSource.stop();
+			}
 
 			audioContext = new AudioContext({sampleRate: sampleRate})
 			
